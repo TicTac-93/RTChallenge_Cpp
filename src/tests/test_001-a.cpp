@@ -29,5 +29,7 @@ int main() {
 
     // Since this is about validation as well as feedback, set up some logic tests to print a PASS / FAIL message
     // automatically.  They should mirror the terminal outputs above.
+
+    // Set up unit tests for all methods and operators
     
 }

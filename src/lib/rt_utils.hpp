@@ -4,6 +4,8 @@
  * @date 241126
  */
 
+#pragma once
+
 const float kFLOAT_MARGIN = 0.00001f;
 
 namespace rtutil {
@@ -11,6 +13,6 @@ namespace rtutil {
 /**
  * @brief Test two floats for equality, within a small margin of error
  */
-bool is_equal(float a, float b);
+bool is_equal(float, float);
 
 }
