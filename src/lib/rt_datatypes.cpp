@@ -11,10 +11,6 @@
 #include <stdexcept>
 
 
-// FLOAT4
-// ===============
-
-
 // POINT
 // ===============
 rt::Point::Point() {
@@ -30,7 +26,7 @@ rt::Point::Point(float in_x, float in_y, float in_z) {
 }
 
 rt::Float4 rt::Point::float4() {
-    return rt::Float4(0.0f, x, y, z);
+    return rt::Float4(1.0f, x, y, z);
 }
 
 rt::Point rt::Point::move(rt::Vec3 vector) {
@@ -50,6 +46,17 @@ bool rt::Point::operator==(rt::Point point2) {
         return true;
     } else {
         return false;
+    }        
+}
+
+bool rt::Point::operator!=(rt::Point point2) {
+    if (rtutil::is_equal(x, point2.x) &&
+        rtutil::is_equal(y, point2.y) &&
+        rtutil::is_equal(z, point2.z)) {
+
+        return false;
+    } else {
+        return true;
     }        
 }
 
@@ -153,3 +160,23 @@ bool rt::Vec3::operator==(rt::Vec3 vector2) {
         return false;
     }        
 }
+
+bool rt::Vec3::operator!=(rt::Vec3 vector2) {
+    if (rtutil::is_equal(x, vector2.x) &&
+        rtutil::is_equal(y, vector2.y) &&
+        rtutil::is_equal(z, vector2.z)) {
+
+        return false;
+    } else {
+        return true;
+    }        
+}
+
+
+// FLOAT4
+// ===============
+rt::Float4::Float4(float in_w, float in_x, float in_y, float in_z)
+    : w(in_w),
+      x(in_x),
+      y(in_y),
+      z(in_z) {}

@@ -11,26 +11,17 @@
 
 namespace rt {
 
-/**
- * @brief A read-only class for returning 4 floats
- */
-class Float4 {    
-    public:
-        Float4(float w_, float x_, float y_, float z_) {
-            const float w = w_;
-            const float x = x_;
-            const float y = y_;
-            const float z = z_;
-        }
-};
+class Point;
+class Vec3;
+class Float4;
 
 /**
  * @brief An XYZ position 
  */
 class Point {
     public:
-        Point();
         Point(float x, float y, float z);
+        Point();
 
         // Variables
         float x, y, z;  // Position on axis
@@ -44,6 +35,7 @@ class Point {
 
         // Operators
         bool operator==(Point);  // Equality check utilizing rtutil::is_equal()
+        bool operator!=(Point);  // Equality check utilizing rtutil::is_equal()
 };
 
 /**
@@ -51,8 +43,8 @@ class Point {
  */
 class Vec3 {
     public:
-        Vec3();
         Vec3(float x, float y, float z);
+        Vec3();
 
         // Variables
         float x, y, z;  // Magnitude of axis
@@ -76,6 +68,16 @@ class Vec3 {
         Vec3 operator+(Vec3);  // Adds another vector to this
         Vec3& operator+=(Vec3);  // Adds another vector to this, modified in-place
         bool operator==(Vec3);  // Equality check utilizing rtutil::is_equal()
+        bool operator!=(Vec3);  // Equality check utilizing rtutil::is_equal()
+};
+
+/**
+ * @brief A read-only class for returning 4 floats
+ */
+class Float4 {    
+    public:
+        Float4(float w, float x, float y, float z);
+        const float w, x, y, z;
 };
 
 }
