@@ -33,7 +33,7 @@ rt::Point rt::Point::move(rt::Vec3 vector) {
     return rt::Point(x + vector.x, y + vector.y, z + vector.z);
 }
 
-rt::Vec3 rt::Point::vec(rt::Point point2) {
+rt::Vec3 rt::Point::vec_to(rt::Point point2) {
     // p1 - p2 produces a back-vector from p2->p1, so we do p2 - p1 to get p1->p2
     return rt::Vec3(point2.x - x, point2.y - y, point2.z - z);
 }
@@ -79,19 +79,15 @@ rt::Float4 rt::Vec3::float4() {
     return rt::Float4(0.0f, x, y, z);
 }
 
-rt::Vec3 rt::Vec3::sub(rt::Vec3 vector2) {
-    return rt::Vec3(x - vector2.x, y - vector2.y, z - vector2.z);
-}
-
-rt::Vec3 rt::Vec3::mult(float scalar) {
-    return rt::Vec3(x * scalar, y * scalar, z * scalar);
+rt::Vec3 rt::Vec3::mul(float scalar) {
+    return rt::Vec3(x * scalar, y * scalar, z * scalar);    
 }
 
 rt::Vec3 rt::Vec3::div(float divisor) {
     if (divisor == 0) {
         throw std::runtime_error("Cannot divide vector by zero!");
     }
-    return mult(1/divisor);
+    return mul(1 / divisor);
 }
 
 float rt::Vec3::mag() {
@@ -125,7 +121,7 @@ rt::Vec3 rt::Vec3::cross(rt::Vec3 vector2) {
 }
 
 rt::Vec3 rt::Vec3::operator-() {
-    return mult(-1);
+    return rt::Vec3(-x, -y, -z);
 }
 
 rt::Vec3 rt::Vec3::operator-(rt::Vec3 vector2) {
