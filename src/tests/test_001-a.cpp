@@ -179,7 +179,6 @@ int main() {
 
     tests ++;
     cout << "rt::RGB equality operator";
-    rt::RGB c = rt::RGB(.1, .2, .3);
     if (rt::RGB(.1, .2, .3) == c &&
         rt::RGB(.2, -1, 3.1) != c) {
             cout << "\n[PASS]\n" << endl;
@@ -201,11 +200,35 @@ int main() {
             all_passed = false;
         }
 
+    tests ++;
+    cout << "rt::RGB add / sub operators";
+    if (rt::RGB(.3, .6, .9) == (c + c3) &&
+        rt::RGB(-.1, -.2, -.3) == (c - c3) &&
+        rt::RGB(.3, .6, .9) == (c += c3) &&
+        rt::RGB(-.1, -.2, -.3) == (c3 -= c) &&
+        rt::RGB(-.3, -.6, -.9) == -c) {
+            cout << "\n[PASS]\n" << endl;
+            passed ++;
+        } else {
+            cout << "\n[FAIL]\n" << endl;
+            all_passed = false;
+        }
+
+    tests ++;
+    cout << "rt::RGB mul operators";
+    if (rt::RGB(-.03, -.12, -.27) == (c * c3) &&
+        rt::RGB(.09, .36, .81) == (c *= c)) {
+            cout << "\n[PASS]\n" << endl;
+            passed ++;
+        } else {
+            cout << "\n[FAIL]\n" << endl;
+            all_passed = false;
+        }
+
     // TODO: Add tests for RGB operators
 
     cout << "===================="
          << "\n    Passed " << passed << "/" << tests
-         << "\n   All Passed: " << all_passed
          << "\n====================" << endl;
 
     return all_passed;

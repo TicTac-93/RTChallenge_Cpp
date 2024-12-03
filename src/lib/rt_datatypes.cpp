@@ -176,3 +176,81 @@ rt::Float4::Float4(float in_w, float in_x, float in_y, float in_z)
       x(in_x),
       y(in_y),
       z(in_z) {}
+
+
+// RGB
+// ===============
+rt::RGB::RGB() {
+    r = 0;
+    g = 0;
+    b = 0;
+}
+
+rt::RGB::RGB(float r_in, float g_in, float b_in) {
+    r = r_in;
+    g = g_in;
+    b = b_in;
+}
+
+rt::RGB rt::RGB::mul(float scalar) {
+    return rt::RGB(r * scalar, g * scalar, b * scalar);
+}
+
+rt::RGB rt::RGB::operator+(rt::RGB color2) {
+    return rt::RGB(r + color2.r, g + color2.g, b + color2.b);
+}
+
+rt::RGB& rt::RGB::operator+=(rt::RGB color2) {
+    r += color2.r;
+    g += color2.g;
+    b += color2.b;
+    return *this;
+}
+
+rt::RGB rt::RGB::operator-() {
+    return rt::RGB(-r, -g, -b);
+}
+
+rt::RGB rt::RGB::operator-(rt::RGB color2) {
+    return rt::RGB(r - color2.r, g - color2.g, b - color2.b);    
+}
+
+rt::RGB& rt::RGB::operator-=(rt::RGB color2) {
+    r -= color2.r;
+    g -= color2.g;
+    b -= color2.b;
+    return *this;    
+}
+
+rt::RGB rt::RGB::operator*(rt::RGB color2) {
+    return rt::RGB(r * color2.r, g * color2.g, b * color2.b);
+}
+
+rt::RGB& rt::RGB::operator*=(rt::RGB color2) {
+    r *= color2.r;
+    g *= color2.g;
+    b *= color2.b;
+    return *this;
+}
+
+bool rt::RGB::operator==(rt::RGB color2) {
+    if (rtutil::is_equal(r, color2.r) &&
+        rtutil::is_equal(g, color2.g) &&
+        rtutil::is_equal(b, color2.b)) {
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool rt::RGB::operator!=(rt::RGB color2) {
+    if (rtutil::is_equal(r, color2.r) &&
+        rtutil::is_equal(g, color2.g) &&
+        rtutil::is_equal(b, color2.b)) {
+
+        return false;
+    } else {
+        return true;
+    }    
+}
