@@ -42,18 +42,25 @@ struct Mouse {
 class Canvas {
 	private:
 		int w_, h_, arraysize;
+		float weight_;
+		unique_ptr<Uint8[]> pixels_bitmask_;  // This array will be dynamically sized when Canvas is initialized
 	public:
-		unique_ptr<rt::RGB[]> pixels;
+		unique_ptr<rt::RGB[]> pixels;  // This array will be dynamically sized when Canvas is initialized
 
-		// Casting some spells here to allow the pixels_ array to be dynamically sized at creation.
-		Canvas(int width, int height);
+		Canvas(int, int, float);
 
 		// Methods
-		void draw_line(rt::RGB color, int x1, int y1, int x2, int y2);
+		void draw_line(rt::RGB, int, int, int, int);
+		void draw_pixel(rt::RGB, int, int, float, float);
 
 		int index(int x, int y) {
 			return (x + (y * w_));
 		}
+
+		void clear_bitmask();
+		void set_bitmask(int, int);
+		Uint8 get_bitmask_chunk(int, int);
+		unique_ptr<Uint8[]>& get_bitmask();
 
 		int w() { return w_; }
 		int h() { return h_; }
@@ -67,7 +74,7 @@ bool sdl_init(int, int);
 void sdl_kill();
 void process_input_key(SDL_Event*, rt::RGB*);
 void process_input_mouse(SDL_Event*, Mouse*, rt::RGB*, Canvas*);
-void copy_to_surf(SDL_Surface*, Canvas*, int, int);
+void copy_to_surf(SDL_Surface*, Canvas*, int = 0, int = 0);
 
 
 // Globals
@@ -84,14 +91,15 @@ SDL_Surface* surface = NULL;
 int main(int argv, char** args) {
 
 	// Variables
+	// ==================
 	int main_width = 640;
 	int main_height = 480;
 	bool running = true;
 	bool resized = false;
-	int threads = thread::hardware_concurrency();
+	int threads = max(4u, thread::hardware_concurrency());
 	// Canvas
 	rt::RGB color = rt::RGB();
-	Canvas canvas(main_width, main_height);
+	Canvas canvas(main_width, main_height, 1);
 	SDL_Rect swatch = {0, 0, 30, 30};
 	// Input
 	Mouse m1;
@@ -101,7 +109,8 @@ int main(int argv, char** args) {
 	auto t1 = clock.now();
 	auto t2 = t1;
 
-	// Initialize SDL, break if there are errors
+	// Initialization
+	// ==================
 	if (!sdl_init(main_width, main_height)) return 1;
 	cout << "SDL2 Initialized" << endl;
 
@@ -112,7 +121,10 @@ int main(int argv, char** args) {
 	}
 	
 	// Main loop
+	// ===========
 	while (running) {
+		canvas.clear_bitmask();
+
 		// Process all inputs in event queue
 		while (SDL_PollEvent(&ev) != 0) {
 			// We'll process shutdown commands, mouse events, and keystrokes
@@ -144,15 +156,12 @@ int main(int argv, char** args) {
 			}
 		}
 
-		// Draw on the canvas, if the LMB is down
-		if (m1.lmb) {
-			canvas.index(m1.x, m1.y);
-		}
-
+		// TIMER
 		t1 = clock.now();
+
 		// Copy the canvas to the window surface, with the power of multithreading
 		// Because what MS Paint has been lacking all these years is multithreading
-		// This function takes about 5ms to process on a single thread
+		// This is actually slower than singlethreading now that I got the bitmask working >.>
 		if (threads > 1) {
 			int row_count = canvas.h() / threads;
 			int row_start = 0;
@@ -169,15 +178,16 @@ int main(int argv, char** args) {
 				dispatch[i].join();
 			}
 		} else {
-			copy_to_surf(surface, &canvas, 0, canvas.h());
+			copy_to_surf(surface, &canvas);
 		}
 
 		// Draw the color swatch to the top left and then update the window
 		SDL_FillRect(surface, &swatch, SDL_MapRGB(surface->format, color.r * 255, color.g * 255, color.b * 255));
 		SDL_UpdateWindowSurface(window);
 
+		// TIMER
 		t2 = clock.now();
-		cout << (chrono::duration_cast<chrono::microseconds>(t2 - t1).count()) << endl;
+		// cout << (chrono::duration_cast<chrono::microseconds>(t2 - t1).count()) << endl;
 
 		// this_thread::sleep_for(chrono::milliseconds(250));
 	}
@@ -361,48 +371,106 @@ void process_input_mouse(SDL_Event* ev, Mouse* mouse, rt::RGB* c, Canvas* canvas
   return;
 }
 
+/**
+ * Copy the pixels from an internal canvas to the SDL Surface.
+ * Uses the canvas' bitmask to ignore unchanged areas, which should be cleared
+ * after calling this function.
+ * @param surface: The SDL_Surface to copy pixel values to
+ * @param canvas: The Canvas to copy from
+ * @param row_start: Which row on the canvas to start copying from.  If unset will start at 0.
+ * @param row_count: Number of rows to copy.  If unset will copy the to the end of the canvas.
+ */
 void copy_to_surf(SDL_Surface* surface, Canvas* canvas, int row_start, int row_count) {
-	Uint8* srf_pixels;  // Memory location for row y of pixels on our Surface
-	int srf_x;  // Memory offset for current pixel x in row y
-	rt::RGB pc;  // Pixel color
-	int i = canvas->index(0, row_start);
-	if ((row_start + row_count) > canvas->h()) {
+	if (row_count == 0) {
+		row_count = canvas->h() - row_start;
+	} else if ((row_start + row_count) > canvas->h()) {
 		row_count = canvas->h() - row_start;
 	}
 
+	// Surface data
+	Uint8* srf_pixels;  // Memory location for row y of pixels on our Surface
+	int srf_x;  // Memory offset for current pixel x in row y
+
+	// Canvas data
+	unique_ptr<Uint8[]>& bitmask = canvas->get_bitmask();
+	Uint8 bitmask_chunk;
+
+	rt::RGB pixel_color;
+
+	// Transfer loop
 	for (int y = row_start; y < (row_start + row_count); y++) {
 		srf_pixels = (Uint8*) surface->pixels + (y * surface->pitch);
-		for (int x = 0; x < canvas->w(); x++) {
-			pc = canvas->pixels[i];
-			srf_x = x * surface->format->BytesPerPixel;
-			srf_pixels[srf_x + 0] = (Uint8) (pc.b * 255);
-			srf_pixels[srf_x + 1] = (Uint8) (pc.g * 255);
-			srf_pixels[srf_x + 2] = (Uint8) (pc.r * 255);
-			srf_pixels[srf_x + 3] = 255;
-			i++;
+		for (int x = 0; x < canvas->w(); x+=8) {
+			// Load this bitmask chunk, 1 byte, 8 pixels
+			bitmask_chunk = bitmask[canvas->index(x, y) / 8];
+			if ( bitmask_chunk == 0 ) {
+				continue;
+			}
+			// Loop through the 8 pixels in this chunk to find changes
+			for (int bit = 0; bit < 8; bit++) {
+				if ((bitmask_chunk & ((Uint8)1 << bit) ) > 0) {
+					// cout << "DRAWING " << x + bit << ", " << y << endl;
+					pixel_color = canvas->pixels[canvas->index(x + bit, y)];
+					srf_x = (x + bit) * surface->format->BytesPerPixel;
+					srf_pixels[srf_x + 0] = (Uint8) (pixel_color.b * 255);
+					srf_pixels[srf_x + 1] = (Uint8) (pixel_color.g * 255);
+					srf_pixels[srf_x + 2] = (Uint8) (pixel_color.r * 255);
+					srf_pixels[srf_x + 3] = 255;
+				} else {
+					// cout << "SKIPPING CHUNK: " << (int)bitmask_chunk << " | BIT: " << bit << endl;
+					continue;
+				}
+			}
 		}
 	}
 }
 
 // Casting some spells here to allow the pixels_ array to be dynamically sized at creation.
-Canvas::Canvas(int width, int height)
+// Some day I'll understand what these initializor decorators are called, but spells will do
+Canvas::Canvas(int width, int height, float line_weight)
 	: arraysize{width * height}
 	, pixels{new rt::RGB[arraysize]}
+	, pixels_bitmask_{new Uint8[(int)ceil(arraysize/8.0f)]}
 {
 	w_ = width;
 	h_ = height;
+	weight_ = line_weight;
 }
 
+/**
+ * Colors pixels on the canvas based on the current color and line weight, using the real
+ * coordinate values to handle blending.
+ */
+void Canvas::draw_pixel(rt::RGB color, int x, int y, float x_real, float y_real) {
+	// TODO: Add line weight
+	float dist = abs((x - x_real) + (y - y_real));
+	pixels[index(x, y)] = color.mul( max(0.f, weight_ - dist));
+	set_bitmask(x, y);
+} 
+
+/**
+ * Coordinates drawing a line between two points on the canvas.  The actual "drawing" is done
+ * by draw_pixel(), which will perform some rudimentary anti-aliasing and blending as well.
+ */
 void Canvas::draw_line(rt::RGB color, int x1, int y1, int x2, int y2) {
 	int dx = x2 - x1;
 	int dy = y2 - y1;
 	float x, y, xstep, ystep;  // Current x,y pos along the line, x,y float offset per step
 	int steps;
 
+	// We don't draw singularities
 	if (dx == 0 && dy == 0) {
 		return;
 	}
 
+	// At high framerates, this is actually pretty common.  Should be optimized to draw the end point and
+	// one intermediary for diagonals
+	if (max(abs(dx), abs(dy)) == 1) {
+		draw_pixel(color, x2, y2, x2, y2);
+		return;
+	}
+
+	// Here on is the actual line-drawing
 	if (dx > 0) {
 		xstep = 1;
 	} else {
@@ -441,10 +509,46 @@ void Canvas::draw_line(rt::RGB color, int x1, int y1, int x2, int y2) {
 	while (steps > 0) {
 		x += xstep;
 		y += ystep;
-		pixels[index((int)x, (int)y)] = color;
+		draw_pixel(color, x, y, x, y);
 		steps --;
 	}
 
 	// cout << "dx: " << dx << " dy: " << dy << endl;
 	return;	
+}
+
+/**
+ * Zeros the bitmask, should be done after pushing any changes to the frame buffer
+ */
+void Canvas::clear_bitmask() {
+	for (int i=0; i < ( (int)ceil(arraysize / 8.0f)); i++) {
+		pixels_bitmask_[i] = 0;
+	}
+}
+
+/**
+ * Set the bit for x,y to 1
+ * @param x, y: Pixel coordinate to set 1 in the bitmask
+ */
+void Canvas::set_bitmask(int x, int y) {
+	// cout << "BITMASK set [" << x << ", " << y << "]" << endl;
+	int i = index(x, y);
+	int i_byte = i / 8;
+	int i_bit = i % 8;
+	pixels_bitmask_[i_byte] |= (1 << i_bit);
+}
+
+/**
+ * Returns the byte that contains this pixel in the bitmask.
+ */
+Uint8 Canvas::get_bitmask_chunk(int x, int y) {
+	int i_byte = index(x, y) / 8;
+	return pixels_bitmask_[i_byte];
+}
+
+/**
+ * Returns a reference to the current bitmask.  Use carefully!
+ */
+unique_ptr<Uint8[]>& Canvas::get_bitmask() {
+	return pixels_bitmask_;
 }
