@@ -3,7 +3,7 @@
  * @brief Test implementation of the LibSDL2 library.
  *        Focused on event processing and managing a canvas of RGB values.
  *        This is largely based on thenumb.at's SDL2 primer
- * @date 121224
+ * @date 221224
  */
 
 #include <chrono>
