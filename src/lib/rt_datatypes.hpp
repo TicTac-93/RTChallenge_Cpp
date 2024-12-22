@@ -14,6 +14,7 @@ namespace rt {
 class Point;
 class Vec3;
 class Float4;
+class RGB;
 
 /**
  * @brief An XYZ position 

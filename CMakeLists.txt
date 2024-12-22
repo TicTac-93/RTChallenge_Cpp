@@ -14,7 +14,7 @@ include_directories(${SDL2_INCLUDE_DIRS})
 # Project build targets
 # =====================
 add_executable(UNIT_TEST src/tests/test_001-a.cpp)
-add_executable(SDL_TEST src/tests/test_002-a.cpp)
+add_executable(SDL_TEST src/tests/test_002-b.cpp)
 
 # Project libraries
 # =================
@@ -26,7 +26,9 @@ target_include_directories(UNIT_TEST PUBLIC
                            "../lib")
 
 target_link_libraries(SDL_TEST PUBLIC
-                      ${SDL2_LIBRARIES})
+                      ${SDL2_LIBRARIES}
+                      RT_Datatypes)
+
 
 # Move builds to the bin
 # ======================
