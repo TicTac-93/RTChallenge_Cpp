@@ -12,7 +12,9 @@ namespace rtutil {
 
 /**
  * @brief Test two floats for equality, within a small margin of error
+ * 
+ * @param a, b: Float value to be compared
  */
-bool is_equal(float, float);
+bool is_equal(float a, float b);
 
 }

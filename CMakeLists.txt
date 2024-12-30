@@ -13,17 +13,19 @@ include_directories(${SDL2_INCLUDE_DIRS})
 
 # Project build targets
 # =====================
-add_executable(UNIT_TEST src/tests/test_001-a.cpp)
+add_executable(UNIT_TEST1 src/tests/test_001-a.cpp)
+add_executable(UNIT_TEST2 src/tests/test_001-b.cpp)
 add_executable(SDL_TEST src/tests/test_002-b.cpp)
 
 # Project libraries
 # =================
 add_subdirectory(src/lib)
 
-target_link_libraries(UNIT_TEST PUBLIC
+target_link_libraries(UNIT_TEST1 PUBLIC
                       RT_Datatypes)
-target_include_directories(UNIT_TEST PUBLIC
-                           "../lib")
+
+target_link_libraries(UNIT_TEST2 PUBLIC
+                        RT_Datatypes)
 
 target_link_libraries(SDL_TEST PUBLIC
                       ${SDL2_LIBRARIES}
