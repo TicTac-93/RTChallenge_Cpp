@@ -10,7 +10,12 @@
 			"*.hlsl": "hlsl",
 			"ostream": "cpp",
 			"iostream": "cpp",
-			"chrono": "cpp"
+			"chrono": "cpp",
+			"vector": "cpp",
+			"array": "cpp",
+			"string": "cpp",
+			"string_view": "cpp",
+			"span": "cpp"
 		}
 	}
 }

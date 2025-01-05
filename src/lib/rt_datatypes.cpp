@@ -161,98 +161,225 @@ rt::Vec3& rt::Vec3::operator+=(rt::Vec3 vector2) {
 	return *this; 
 }
 
-// M4x4
+// Matrix
 // ===============
-rt::M4x4::M4x4() {}
-
-rt::M4x4::M4x4(float values[4][4]) {
-	for (int r=0; r<4; r++) {
-		for (int c=0; c<4; c++) {
-			data[r][c] = values[r][c];
-		}
+rt::Matrix::Matrix(int in_rows, int in_columns)
+	: rows{in_rows}
+	,	cols{in_columns}
+	, data_size_{in_rows * in_columns}
+{
+	data_.resize(data_size_);
+	data_.shrink_to_fit();
+	for (int i = 0; i < data_size_; i++) {
+		data_[i] = 0;
 	}
 }
 
-void rt::M4x4::copy_(rt::M4x4 m2) {
-	for (int r=0; r<4; r++) {
-		for (int c=0; c<4; c++) {
-			data[r][c] = m2.data[r][c];
-		}
+rt::Matrix::Matrix(int in_rows, int in_columns, std::vector<float> values)
+	: rows{in_rows}
+	,	cols{in_columns}
+	, data_size_{in_rows * in_columns}
+{
+	if (values.size() != data_size_) {
+		std::string msg = "Length of values arg (" + std::to_string(values.size())
+											+ ") does not match number of cells (" + std::to_string(data_size_) + ")";
+		throw(std::invalid_argument(msg));
+	}
+
+	data_.resize(data_size_);
+	data_.shrink_to_fit();
+	for (int i = 0; i < data_size_; i++) {
+		data_[i] = values[i];
 	}
 }
 
-void rt::M4x4::init_identity() {
-	for (int r=0; r<4; r++) {
-		for (int c=0; c<4; c++) {
+float& rt::Matrix::data(int row, int col) {
+	if (row >= rows
+			|| col >= cols
+			|| row < 0
+			|| col < 0) {
+				std::string msg = "Matrix[" + std::to_string(rows) + "x" + std::to_string(cols) +
+													"] index [" + std::to_string(row) + ", " + std::to_string(col) + "] INVALID!";
+				throw std::out_of_range(msg);
+	}
+	// Data is stored in 1d vector, row by row
+	return data_[(row * cols) + col];
+}
+
+void rt::Matrix::init_identity() {
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
 			if (r == c) {
-				data[r][c] = 1;
+				data(r, c) = 1;
 			} else {
-				data[r][c] = 0;
+				data(r, c) = 0;
 			}
 		}
-	}
+	}	
 }
 
-rt::M4x4 rt::M4x4::mul(rt::M4x4 m2) {
-	rt::M4x4 output = rt::M4x4();
+rt::Matrix rt::Matrix::mul(rt::Matrix B) {
+	// Validate matrices
+	if (cols != B.rows) {
+		std::string msg = "Cannot multiply matrices of size [" + std::to_string(rows) + "," + std::to_string(cols)
+											+ "] and [" + std::to_string(B.rows) + ", " + std::to_string(B.cols) + "]";
+		throw(std::invalid_argument(msg));
+	}
 
-	for (int r=0; r<4; r++) {
-		for (int c=0; c<4; c++) {
-			output.data[r][c] = (
-					(data[r][0] * m2.data[0][c])
-				+ (data[r][1] * m2.data[1][c])
-				+ (data[r][2] * m2.data[2][c])
-				+ (data[r][3] * m2.data[3][c])
-			);
+	int out_rows = rows;
+	int out_cols = B.cols;
+	rt::Matrix output = rt::Matrix(out_rows, out_cols);
+	float val;
+
+	// Iterate over each cell in the output Matrix
+	for (int r = 0; r < out_rows; r++) {
+		for (int c = 0; c < out_cols; c++) {
+			val = 0;  // Reset val for each cell calculation
+			for (int i = 0; i < cols; i++) {
+				// Calculate the output value, one combination at a time.
+				// (r, 0) * (0, c)  +  (r, 1) * (1, c)  +  ...
+				val += (data(r, i) * B.data(i, c));
+			}
+			output.data(r, c) = val;
 		}
 	}
 
 	return output;
 }
 
-bool rt::M4x4::operator==(rt::M4x4 m2) {
-	for (int r=0; r<4; r++) {
-		for (int c=0; c<4; c++) {
-			if ( !rtutil::is_equal(data[r][c], m2.data[r][c]) ) {
-				return false;
-			}
+rt::Point rt::Matrix::mul(rt::Point p) {
+	// Validate this matrix (can be 3x3, 4x3, or 4x4)
+	if (cols < 3
+			|| cols > 4
+			|| rows < 3
+			|| rows > 4) {
+				std::string msg = "Cannot multiply matrix of size [" + std::to_string(rows) + "," + std::to_string(cols)
+													+ "] and a Point";
+				throw(std::invalid_argument(msg));		
+	}
+
+	rt::Point output = rt::Point();
+	float xyz[4];
+	float val;
+	int c;
+
+	xyz[0] = p.x;
+	xyz[1] = p.y;
+	xyz[2] = p.z;
+	xyz[3] = p.w;
+
+	// Iterate over each value in the output Point
+	// X
+	val = 0;  // Reset val
+	for (int i = 0; i < cols; i++) {
+		// Calculate the output value, one combination at a time.
+		val += (data(0, i) * xyz[i]);
+	}
+	output.x = val;
+
+	// Y
+	val = 0;  // Reset val
+	for (int i = 0; i < cols; i++) {
+		// Calculate the output value, one combination at a time.
+		val += (data(1, i) * xyz[i]);
+	}
+	output.y = val;
+
+	// Z
+	val = 0;  // Reset val
+	for (int i = 0; i < cols; i++) {
+		// Calculate the output value, one combination at a time.
+		val += (data(2, i) * xyz[i]);
+	}
+	output.z = val;
+
+	// We won't worry about W, assume it's still 1
+
+	return output;
+}
+
+rt::Vec3 rt::Matrix::mul(rt::Vec3 v) {
+	// Validate this matrix (can be 3x3, 4x3, or 4x4)
+	if (cols < 3
+			|| cols > 4
+			|| rows < 3
+			|| rows > 4) {
+				std::string msg = "Cannot multiply matrix of size [" + std::to_string(rows) + "," + std::to_string(cols)
+													+ "] and a Vec3";
+				throw(std::invalid_argument(msg));		
+	}
+
+	rt::Vec3 output = rt::Vec3();
+	float xyz[4];
+	float val;
+	int c;
+
+	xyz[0] = v.x;
+	xyz[1] = v.y;
+	xyz[2] = v.z;
+	xyz[3] = v.w;
+
+	// Iterate over each value in the output Point
+	// X
+	val = 0;  // Reset val
+	for (int i = 0; i < cols; i++) {
+		// Calculate the output value, one combination at a time.
+		val += (data(0, i) * xyz[i]);
+	}
+	output.x = val;
+
+	// Y
+	val = 0;  // Reset val
+	for (int i = 0; i < cols; i++) {
+		// Calculate the output value, one combination at a time.
+		val += (data(1, i) * xyz[i]);
+	}
+	output.y = val;
+
+	// Z
+	val = 0;  // Reset val
+	for (int i = 0; i < cols; i++) {
+		// Calculate the output value, one combination at a time.
+		val += (data(2, i) * xyz[i]);
+	}
+	output.z = val;
+
+	// We won't worry about W, assume it's still 0
+
+	return output;
+}
+
+rt::Matrix rt::Matrix::transpose() {
+	rt::Matrix output = rt::Matrix(cols, rows);
+
+	for (int r = 0; r < 4; r++) {
+		for (int c = 0; c < 4; c++) {
+			output.data(c, r) = data(r, c);
 		}
 	}
-	return true;
+
+	return output;
 }
 
-bool rt::M4x4::operator!=(rt::M4x4 m2) {
-	return !(*this == m2);
-}
+rt::Matrix& rt::Matrix::operator=(rt::Matrix m2) {
+	if (rows != m2.rows
+			|| cols != m2.cols) {
+				throw(std::runtime_error("Cannot copy matrices of different sizes"));
+	}
+	memcpy(&data_, &m2.data_, sizeof(data_));
 
-rt::M4x4 rt::M4x4::operator*(rt::M4x4 m2) {
-	return mul(m2);
-}
-
-rt::M4x4& rt::M4x4::operator*=(rt::M4x4 m2) {
-	copy_(mul(m2));
 	return *this;
 }
 
-// M3x3
-// ===============
-rt::M3x3::M3x3() {}
-
-/**
- * Initialize the matrix with data from cells
- */
-rt::M3x3::M3x3(float values[3][3]) {
-	for (int r=0; r<3; r++) {
-		for (int c=0; c<3; c++) {
-			data[r][c] = values[r][c];
-		}
+bool rt::Matrix::operator==(rt::Matrix m2) {
+	if (rows != m2.rows
+			|| cols != m2.cols) {
+				return false;
 	}
-}
 
-bool rt::M3x3::operator==(M3x3 m2) {
-	for (int r=0; r<3; r++) {
-		for (int c=0; c<3; c++) {
-			if ( !rtutil::is_equal(data[r][c], m2.data[r][c]) ) {
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			if ( !rtutil::is_equal(data(r, c), m2.data(r, c)) ) {
 				return false;
 			}
 		}
@@ -260,37 +387,7 @@ bool rt::M3x3::operator==(M3x3 m2) {
 	return true;
 }
 
-bool rt::M3x3::operator!=(M3x3 m2) {
-	return !(*this == m2);
-}
-
-// M2x2
-// ===============
-rt::M2x2::M2x2() {}
-
-/**
- * Initialize the matrix with data from cells
- */
-rt::M2x2::M2x2(float values[2][2]) {
-	for (int r=0; r<2; r++) {
-		for (int c=0; c<2; c++) {
-			data[r][c] = values[r][c];
-		}
-	}
-}
-
-bool rt::M2x2::operator==(M2x2 m2) {
-	for (int r=0; r<2; r++) {
-		for (int c=0; c<2; c++) {
-			if ( !rtutil::is_equal(data[r][c], m2.data[r][c]) ) {
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-bool rt::M2x2::operator!=(M2x2 m2) {
+bool rt::Matrix::operator!=(rt::Matrix m2) {
 	return !(*this == m2);
 }
 

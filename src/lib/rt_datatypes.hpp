@@ -7,13 +7,14 @@
 	#pragma once
 
 	#include <string>
+	#include <vector>
 	#include "rt_utils.hpp"
 
 	namespace rt {
 
 	class Point;
 	class Vec3;
-	class M4x4;
+	class Matrix;
 
 	class RGB;
 
@@ -34,11 +35,12 @@
 			Point(float x, float y, float z);
 
 			// Variables
-			float x, y, z;  // Position on axis
+			float x, y, z;  		// Position on axis
+			const float w = 1;	// Used in matrix operations
 
 			// Methods
 			/**
-			 * @brief Returns Float4(W,X,Y,Z), where W is 1.0
+			 * @brief Returns Float4(W,X,Y,Z)
 			 */
 			Float4 float4();
 
@@ -72,11 +74,12 @@
 			Vec3(float x, float y, float z);
 
 			// Variables
-			float x, y, z;  // Magnitude of axis
+			float x, y, z;			// Magnitude of axis
+			const float w = 0;	// Used in matrix operations
 
 			// Methods
 			/**
-			 * @brief Returns a Float4(W,X,Y,Z), where W is 0
+			 * @brief Returns a Float4(W,X,Y,Z)
 			 */
 			Float4 float4();
 			
@@ -120,122 +123,114 @@
 			Vec3& operator+=(Vec3);     // Adds another vector to this, modified in-place
 	};
 
-	/**
-	 * @brief A 4x4 Matrix of floats
-	 */
-	class M4x4 {
+	class Matrix {
 		private:
-		/**
-		 * @brief Copy the data from Matrix m2 to this
-		 * 
-		 * @param m2: The matrix to be copied
-		 */
-			void copy_(M4x4 m2);
-			
+			const int data_size_;
+			std::vector<float> data_;
+
+
 		public:
-			/**
-			 * @brief Initializes a new zeroed out 4x4 Matrix
-			 */
-			M4x4();
+			const int rows, cols;
 
 			/**
-			 * @brief Initializes a new 4x4 Matrix using 2d array values
-			 * @param values: A 4x4 array of values to initialize with
+			 * @brief Construct a Matrix of variable size.  Initially zero-filled.
+			 * 
+			 * 				The Matrix CAN NOT be resized after construction, instead make use of methods
+			 * 				submatrix() to reduce size
+			 * 
+			 * @param rows
+			 * @param columns
 			 */
-			M4x4(float values[4][4]);
+			Matrix(int rows, int columns);
 
-			// Variables
-			float data[4][4] {
-				{0, 0, 0, 0},
-				{0, 0, 0, 0},
-				{0, 0, 0, 0},
-				{0, 0, 0, 0}
-			};
+			/**
+			 * @brief Construct a Matrix of variable size.  Initially filled with data from values[] to (0,0), (0,1), (0,2), etc.
+			 * 
+			 * 				If values[] is not the same size as the Matrix (rows*columns) an invalid_argument exception will be thrown.
+			 * 
+			 * 				The Matrix CAN NOT be resized after construction, instead make use of methods
+			 * 				submatrix() to reduce size
+			 * 
+			 * @param rows 
+			 * @param columns 
+			 * @param values: A 1d array of values to initialize the matrix with.  Should be of length (rows * columns).
+			 */
+			Matrix(int rows, int columns, std::vector <float> values);
+
+			// Accessors
+			/**
+			 * @brief Provides access to the cells within this Matrix in (row, column) format.
+			 * 
+			 * 				Will raise out_of_range if the index is invalid.
+			 * 
+			 * @param row: Zero-based index of row to access
+			 * @param col: Zero-based index of column to access
+			 * @return float&: Reference to the value in the cell, to read/write
+			 */
+			float& data(int row, int col);
 
 			// Methods
 			// Matrix math methods will be the main means of manipulation
 			/**
-			 * @brief Convenience function to set this up as an Identity Matrix.
-			 *				This will clear any data previously entered!
+			 * @brief Initializes this Matrix as an identity matrix.  All existing data will be lost!
+			 * 
 			 */
 			void init_identity();
 
 			/**
-			 * @brief Multiplies this matrix with another 4x4 matrix.
+			 * @brief Multiplies this Matrix(A) with another(B), returning the result(AB).
 			 * 
-			 * @param m2: the matrix to be multiplied with.
-			 * @return M4x4 
+			 * 				The number of A's columns must be equal to B's rows. 
+			 * 				If the matrices are of different but compatible sizes, the return will be a different size.
+			 * 				If the matrices are of incompatible sizes, an invalid_argument exception will be thrown.
+			 * 
+			 * @param B: the Matrix to multiply this by.
+			 * @return Matrix 
 			 */
-			M4x4 mul(M4x4 m2);
+			Matrix mul(Matrix B);
 
-			// TODO: Multiplication of Point and Vec3
+			/**
+			 * @brief Multiplies Point p by this matrix, treating it as a 4x1 Matrix.
+			 * 				
+			 * 				Will throw a logic_error if this is not a 4x4 Matrix.
+			 * 
+			 * @param p: the Point to be multiplied (transformed) by this Matrix.
+			 * @return Point
+			 */
+			Point mul(Point p);
+
+			/**
+			 * @brief Multiplies Vec3 v by this matrix, treating it as a 4x1 Matrix.
+			 * 				
+			 * 				Will throw a logic_error if this is not a 4x4 Matrix.
+			 * 
+			 * @param v: the Vec3 to be multiplied (transformed) by this Matrix.
+			 * @return Vec3 
+			 */
+			Vec3 mul(Vec3 v);
+
+			/**
+			 * @brief Transposes this matrix, returning the result.
+			 * 				Rows become columns, and vice-versa.
+			 * 
+			 * @return Matrix 
+			 */
+			Matrix transpose();
+
+			/**
+			 * @brief Removes the indicated row and column, returning the resulting (slightly smaller) Matrix.
+			 * 
+			 * @param row: the row to be removed.
+			 * @param column: the column to be removed.
+			 * @return Matrix 
+			 */
+			// Might veer from the text for this to make it more versatile and helpful for 
+			// Matrix submatrix(int row, int column);
 
 			// Operators
-			bool operator==(M4x4);		// Equality check utilizing rtutil::is_equal() per cell
-			bool operator!=(M4x4);		// Equality check utilizing rtutil::is_equal() per cell
-			M4x4 operator*(M4x4);			// Multiplies this with another 4x4 Matrix
-			M4x4& operator*=(M4x4);		// Multiplies this with another 4x4 Matrix, modified in place
-	};
-
-	/**
-	 * @brief A 3x3 Matrix of floats
-	 */
-	class M3x3 {
-		public:
-			/**
-			 * @brief Initializes a new, zeroed out 3x3 Matrix
-			 */
-			M3x3();
-			
-			/**
-			 * @brief Initializes a new 3x3 Matrix using 2d array values
-			 * @param values: A 3x3 array of values to initialize with
-			 */
-			M3x3(float[3][3]);
-
-			// Variables
-			float data[3][3] {
-				{0, 0, 0},
-				{0, 0, 0},
-				{0, 0, 0}
-			};
-
-			// Methods
-			// Matrix math methods will be the main means of manipulation
-
-			// Operators
-			bool operator==(M3x3);		// Equality check utilizing rtutil::is_equal() per cell
-			bool operator!=(M3x3);		// Equality check utilizing rtutil::is_equal() per cell
-	};
-
-	/**
-	 * @brief A 2x2 Matrix of floats
-	 */
-	class M2x2 {
-		public:
-			/**
-			 * @brief Initializes a new, zeroed out 3x3 Matrix
-			 */
-			M2x2();
-			
-			/**
-			 * @brief Initializes a new 2x2 Matrix using 2d array values
-			 * @param values: A 2x2 array of values to initialize with
-			 */
-			M2x2(float[2][2]);
-
-			// Variables
-			float data[2][2] {
-				{0, 0},
-				{0, 0}
-			};
-
-			// Methods
-			// Matrix math methods will be the main means of manipulation
-
-			// Operators
-			bool operator==(M2x2);		// Equality check utilizing rtutil::is_equal() per cell
-			bool operator!=(M2x2);		// Equality check utilizing rtutil::is_equal() per cell
+			Matrix& operator=(Matrix);	// Copy operator, will throw a runtime_error if the matrices are of different sizes
+			bool operator==(Matrix);		// Equality check using rtutil::is_equal() per-cell
+			bool operator!=(Matrix);		// Equality check using rtutil::is_equal() per-cell
 	};
 
 	/**
@@ -273,6 +268,7 @@
 	/**
 	 * @brief A read-only struct for returning 4 floats
 	 */
+	// Do we really need this??
 	struct Float4 {    
 		public:
 			Float4(float w, float x, float y, float z);
