@@ -19,6 +19,7 @@
 	class RGB;
 
 	struct Float4;
+	struct MxReturn;
 
 	/**
 	 * @brief An XYZ position 
@@ -128,6 +129,14 @@
 			const int data_size_;
 			std::vector<float> data_;
 
+			/**
+			 * @brief Calculates the cofactor of a given cell in the matrix.
+			 * 
+			 * @param row 
+			 * @param col 
+			 * @return float
+			 */
+			float cofactor_at(int row, int col);
 
 		public:
 			const int rows, cols;
@@ -218,14 +227,32 @@
 			Matrix transpose();
 
 			/**
-			 * @brief Removes the indicated row and column, returning the resulting (slightly smaller) Matrix.
+			 * @brief Calculates and returns the determinant of the Matrix.
+			 * 				
+			 * 				The Matrix must be square, otherwise a logic_error will be thrown.
 			 * 
-			 * @param row: the row to be removed.
-			 * @param column: the column to be removed.
+			 * @return float 
+			 */
+			float determinant();
+
+			/**
+			 * @brief Returns a submatrix by removing the given row and column.
+			 * 
+			 * 				If the row or column is out of range, out_of_range will be thrown.
+			 * 				If the matrix is already 2x2, logic_error will be thrown.
+			 * 
+			 * @param row 
+			 * @param col 
 			 * @return Matrix 
 			 */
-			// Might veer from the text for this to make it more versatile and helpful for 
-			// Matrix submatrix(int row, int column);
+			Matrix submatrix(int row, int col);
+			
+			/**
+			 * @brief Calculates the inverse of the Matrix, if possible.  If not, returns FALSE and a blank Matrix.
+			 * 
+			 * @return MxReturn struct indicating success of the operation, and the resulting Matrix.
+			 */
+			MxReturn inverse();
 
 			// Operators
 			Matrix& operator=(Matrix);	// Copy operator, will throw a runtime_error if the matrices are of different sizes
@@ -273,6 +300,20 @@
 		public:
 			Float4(float w, float x, float y, float z);
 			const float w, x, y, z;
+	};
+
+	/**
+	 * @brief Struct for handling Matrix operations that may fail.
+	 * 				
+	 * @param success: <bool> The success or failure of the matrix operation
+	 * 
+	 * @param result: <Matrix> The resulting Matrix.  See method documentation for result on failure.
+	 */
+	struct MxReturn {
+		public:
+			MxReturn(bool success, Matrix matrix);
+			const bool success;
+			Matrix result;
 	};
 
 	}

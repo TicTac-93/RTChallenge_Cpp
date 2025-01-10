@@ -32,7 +32,7 @@ void FAIL (string name) {
 }
 
 int main() {
-	cout << "\nUNIT TEST - rt::M4x4 | rt::M3x3 | rt::M2x2" << endl;
+	cout << "\nUNIT TEST - rt::Matrix" << endl;
 
 	// tests ++;
 	// test_name = "rt::M4x4 mul operators";
@@ -210,7 +210,7 @@ int main() {
 	}
 
 	tests ++;
-	test_name = "rt::Matrix initializers";
+	test_name = "rt::Matrix initializers [1 exc checks]";
 	exc_test = true;
 	rt::Matrix b = rt::Matrix(4, 4);
 	b.init_identity();
@@ -230,7 +230,7 @@ int main() {
 		rt::Matrix(3, 3, cells_4x4a);
 		exc_test = false;
 	} catch(std::invalid_argument err) {
-		cout << "CAUGHT error: " << err.what() << endl;
+		cout << "CAUGHT error 1/1: " << err.what() << endl;
 	}
 	rt::Matrix b2 = rt::Matrix(4, 4, cells_4x4a);
 	rt::Matrix b3 = rt::Matrix(4, 4, cells_4x4b);
@@ -244,7 +244,7 @@ int main() {
 	}
 
 	tests ++;
-	test_name = "rt::Matrix data access";
+	test_name = "rt::Matrix data access [2 exc checks]";
 	exc_test = true;
 	rt::Matrix c = rt::Matrix(4, 4);
 	c.init_identity();
@@ -254,13 +254,13 @@ int main() {
 		c.data(3, 4) = 34;
 		exc_test = false;
 	} catch(std::out_of_range err) {
-		cout << "CAUGHT error: " << err.what() << endl;
+		cout << "CAUGHT error 1/2: " << err.what() << endl;
 	}
 	try {
 		c.data(-1, 3) = -13;
 		exc_test = false;
 	} catch(std::out_of_range err) {
-		cout << "CAUGHT error: " << err.what() << endl;
+		cout << "CAUGHT error 2/2: " << err.what() << endl;
 	}
 	
 	if (exc_test
@@ -329,13 +329,181 @@ int main() {
 		1, 2, 8, 0,
 		2, 4, 6, 0,
 		3, 4, 4, 0,
-		4, 2, 1, 1,
+		4, 2, 1, 1
 	};
 	rt::Matrix f = rt::Matrix(4, 4, cells_4x4f2);
 	if (e.transpose() == f) {
 		PASS();
 	} else {
 		FAIL(test_name);
+	}
+
+	tests ++;
+	test_name = "rt::Matrix submatrix [3 exc checks]";
+	exc_test = true;
+	std::vector<float> cells_4x4h1 = {
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		9, 0, 1, 2,
+		3, 4, 5, 6
+	};
+	std::vector<float> cells_3x3h2 = {
+		1, 2, 4,
+		9, 0, 2,
+		3, 4, 6
+	};
+	rt::Matrix h1 = rt::Matrix(4, 4, cells_4x4h1);
+	rt::Matrix h2 = rt::Matrix(3, 3, cells_3x3h2);
+
+	try {
+		h1.submatrix(0, 4);
+		exc_test = false;
+	} catch(std::out_of_range err) {
+		cout << "CAUGHT error 1/3: " << err.what() << endl;
+	}
+	try {
+		h2.submatrix(-1, 0);
+		exc_test = false;
+	} catch(std::out_of_range err) {
+		cout << "CAUGHT error 2/3: " << err.what() << endl;
+	}
+	try {
+		h2.submatrix(0, 0).submatrix(0, 0);
+		exc_test = false;
+	} catch(std::logic_error err) {
+		cout << "CAUGHT error 3/3: " << err.what() << endl;
+	}
+
+	if (h1.submatrix(1, 2) == h2
+			&& exc_test) {
+				PASS();
+			} else {
+				FAIL(test_name);
+	}
+
+	tests ++;
+	test_name = "rt::Matrix determinant";
+	std::vector<float> cells_i1_2x2 = {
+		 1, 5,
+		-3, 2
+	};
+	std::vector<float> cells_i2_3x3 = {
+		 1,  2,  6,
+		-5,  8, -4,
+		 2,  6,  4
+	};
+	std::vector<float> cells_i3_4x4 = {
+		-2, -8,  3,  5,
+		-3,  1,  7,  3,
+		 1,  2, -9,  6,
+		-6,  7,  7, -9
+	};
+	rt::Matrix i1 = rt::Matrix(2, 2, cells_i1_2x2);
+	rt::Matrix i2 = rt::Matrix(3, 3, cells_i2_3x3);
+	rt::Matrix i3 = rt::Matrix(4, 4, cells_i3_4x4);
+	if (is_equal(i1.determinant(), 17)
+			&& is_equal(i2.determinant(), -196)
+			&& is_equal(i3.determinant(), -4071)) {
+				PASS();
+			} else {
+				cout << "i1 " << i1.determinant() << "\ni2 " << i2.determinant() << "\ni3 " << i3.determinant() << endl;
+				FAIL(test_name);
+	}
+
+	tests ++;
+	test_name = "rt::Matrix inverse";
+	std::vector<float> cells_j1_4x4 = {
+		 6,  4,  4,  4,
+		 5,  5,  7,  6,
+		 4, -9,  3, -7,
+		 9,  1,  7, -6
+	};
+	std::vector<float> cells_j2_4x4 = {
+		-4,  2, -2, -3,
+		 9,  6,  2,  6,
+		 0, -5,  1, -5,
+		 0,  0,  0,  0
+	};
+	std::vector<float> cells_j3_4x4 = {
+		-5,  2,  6, -8,
+		 1, -5,  1,  8,
+		 7,  7, -6, -7,
+		 1, -3,  7,  4
+	};
+	std::vector<float> cells_j4b_4x4 = {
+		  0.21805,  0.45113,  0.24060, -0.04511,
+		 -0.80827, -1.45677, -0.44361,  0.52068,
+		 -0.07895, -0.22368, -0.05263,  0.19737,
+		 -0.52256, -0.81391, -0.30075,  0.30639
+	};
+	rt::Matrix j1 = rt::Matrix(4, 4, cells_j1_4x4);
+	rt::Matrix j2 = rt::Matrix(4, 4, cells_j2_4x4);
+	rt::Matrix j3 = rt::Matrix(4, 4, cells_j3_4x4);
+	rt::Matrix j4 = rt::Matrix(4, 4);
+	rt::Matrix j4b = rt::Matrix(4, 4, cells_j4b_4x4);
+	j4 = j3.inverse().result;
+	if (j4 == j4b
+			&& j1.inverse().success
+			&& !j2.inverse().success) {
+				PASS();
+			} else {
+				FAIL(test_name);
+	}
+
+	tests ++;
+	test_name = "rt::Matrix inverse - additional tests";
+	std::vector<float> cells_k1_4x4 = {
+		 8, -5,  9,  2,
+		 7,  5,  6,  1,
+		-6,  0,  9,  6,
+		-3,  0, -9, -4
+	};
+	std::vector<float> cells_k1b_4x4 = {
+		-0.15385, -0.15385, -0.28205, -0.53846,
+		-0.07692,  0.12308,  0.02564,  0.03077,
+		 0.35897,  0.35897,  0.43590,  0.92308,
+		-0.69231, -0.69231, -0.76923, -1.92308
+	};
+
+	std::vector<float> cells_k2_4x4 = {
+		 9,  3,  0,  9,
+		-5, -2, -6, -3,
+		-4,  9,  6,  4,
+		-7,  6,  6,  2
+	};
+	std::vector<float> cells_k2b_4x4 = {
+		-0.04074, -0.07778,  0.14444, -0.22222,
+		-0.07778,  0.03333,  0.36667, -0.33333,
+		-0.02901, -0.14630, -0.10926,  0.12963,
+		 0.17778,  0.06667, -0.26667,  0.33333
+	};
+
+	std::vector<float> cells_k3_4x4 = {
+		 3, -9,  7, 3,
+		 3, -8,  2, -9,
+		-4,  4,  4,  1,
+		-6,  5, -1,  1
+	};
+	std::vector<float> cells_k4_4x4 = {
+		 8,  2,  2,  2,
+		 3, -1,  7,  0,
+		 7,  0,  5,  4,
+		 6, -2,  0,  5
+	};
+
+	rt::Matrix k1 = rt::Matrix(4, 4, cells_k1_4x4);
+	rt::Matrix k1b = rt::Matrix(4, 4, cells_k1b_4x4);
+	rt::Matrix k2 = rt::Matrix(4, 4, cells_k2_4x4);
+	rt::Matrix k2b = rt::Matrix(4, 4, cells_k2b_4x4);
+	rt::Matrix k3 = rt::Matrix(4, 4, cells_k3_4x4);
+	rt::Matrix k4 = rt::Matrix(4, 4, cells_k4_4x4);
+	rt::Matrix k5 = k3.mul(k4);													// k3 * k4
+	if (k1.inverse().result == k1b
+			&& k2.inverse().result == k2b
+			&& (k5.mul(k4.inverse().result) == k3)) {
+				PASS();
+			} else {
+				FAIL(test_name);
 	}
 
 

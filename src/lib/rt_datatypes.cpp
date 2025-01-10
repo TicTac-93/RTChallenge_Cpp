@@ -361,6 +361,100 @@ rt::Matrix rt::Matrix::transpose() {
 	return output;
 }
 
+float rt::Matrix::cofactor_at(int row, int col) {
+	// Set the cofactor sign for this cell to pos or neg
+	// "Odd" cells are negative (0,1), (1,2), (3,0), etc
+	int sign = (row + col) % 2 == 0 ? 1 : -1;
+	return(sign * submatrix(row, col).determinant());
+}
+
+float rt::Matrix::determinant() {
+	if (rows != cols) {
+		throw(std::logic_error("Cannot calculate determinant of a non-square matrix!"));
+	}
+
+	float output = 0;
+
+	// Handle larger matrices recursively
+	if (cols > 2) {
+		for (int c = 0; c < cols; c++) {
+			output += (
+					data(0, c)  // This cell's value
+				* cofactor_at(0, c)
+			);
+		}
+
+	// Eventually they'll be whittled down to 2x2
+	} else {
+		output = (
+				data(0, 0) * data(1, 1)
+			-	data(0, 1) * data(1, 0)
+		);
+	}
+
+	return output; 
+}
+
+rt::Matrix rt::Matrix::submatrix(int row, int col) {
+	if (row < 0
+			|| col < 0
+			|| row > rows
+			|| col > cols) {
+				std::string msg = "Cannot get submatrix at [" + std::to_string(row) + ", " + std::to_string(col) + "]";
+				throw(std::out_of_range(msg));
+	} else if (rows <= 2 || cols <= 2) {
+		throw(std::logic_error("Matrix is too small to be subdivided!"));
+	}
+
+	rt::Matrix m_out = rt::Matrix(rows - 1, cols - 1);
+	int r_out, c_out;
+
+	r_out = 0;
+	for (int r = 0; r < rows; r++) {
+		// Skip the indicated row
+		if (r == row) {
+			continue;
+		}
+
+		c_out = 0;
+		for (int c = 0; c < cols; c++) {
+			// Skip the indicated column
+			if (c == col) {
+				continue;
+			}
+			m_out.data(r_out, c_out) = data(r, c);
+			c_out ++;
+		}
+		r_out ++;
+	}
+
+	return m_out;
+}
+
+rt::MxReturn rt::Matrix::inverse() {
+	rt::Matrix M_inv = rt::Matrix(rows, cols);
+	if (rows != cols) {
+		return rt::MxReturn(false, M_inv);  // Squares only
+	}
+
+	float det = determinant();
+	if (rtutil::is_equal(det, 0)) {
+		return rt::MxReturn(false, M_inv);  // Matrix is uninvertable
+	}
+
+	// Calculate cofactor of each cell
+	// Divide by determinant of the matrix
+	// Transpose
+	// We'll combine a few steps here to avoid unnecessarily creating class instances
+	for (int r = 0; r < rows; r++) {
+		for (int c = 0; c < cols; c++) {
+			// Transpose as we go by placing (r, c) into (c, r)
+			M_inv.data(c, r) = (cofactor_at(r, c) / det);
+		}
+	}
+	return rt::MxReturn(true, M_inv);
+}
+
 rt::Matrix& rt::Matrix::operator=(rt::Matrix m2) {
 	if (rows != m2.rows
 			|| cols != m2.cols) {
@@ -470,3 +564,9 @@ rt::Float4::Float4(float in_w, float in_x, float in_y, float in_z)
 	  x(in_x),
 	  y(in_y),
 	  z(in_z) {}
+
+
+// MxRETURN
+rt::MxReturn::MxReturn(bool in_success, rt::Matrix in_result)
+	: success(in_success)
+	, result(in_result) {}
