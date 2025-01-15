@@ -1,7 +1,7 @@
 	/**
 	 * @file rt_datatypes.hpp
 	 * @brief The core classes of the raytracer
-	 * @date 241230
+	 * @date 2025-1-15
 	 */
 
 	#pragma once
@@ -56,8 +56,8 @@
 			Vec3 vec_to(Point point2);
 
 			// Operators
-			bool operator==(Point);     // Equality check utilizing rtutil::is_equal()
-			bool operator!=(Point);     // Equality check utilizing rtutil::is_equal()
+			bool operator==(Point);     // Equality check utilizing rtutil::isEqual()
+			bool operator!=(Point);     // Equality check utilizing rtutil::isEqual()
 	};
 
 	/**
@@ -115,8 +115,8 @@
 			Vec3 cross(Vec3 vector2);
 			
 			// Operators
-			bool operator==(Vec3);      // Equality check utilizing rtutil::is_equal()
-			bool operator!=(Vec3);      // Equality check utilizing rtutil::is_equal()
+			bool operator==(Vec3);      // Equality check utilizing rtutil::isEqual()
+			bool operator!=(Vec3);      // Equality check utilizing rtutil::isEqual()
 			Vec3 operator-();           // Negates the vector
 			Vec3 operator-(Vec3);       // Subtracts another vector from this
 			Vec3& operator-=(Vec3);     // Subtracts another vector from this, modified in-place
@@ -256,8 +256,10 @@
 
 			// Operators
 			Matrix& operator=(Matrix);	// Copy operator, will throw a runtime_error if the matrices are of different sizes
-			bool operator==(Matrix);		// Equality check using rtutil::is_equal() per-cell
-			bool operator!=(Matrix);		// Equality check using rtutil::is_equal() per-cell
+			bool operator==(Matrix);		// Equality check using rtutil::isEqual() per-cell
+			bool operator!=(Matrix);		// Equality check using rtutil::isEqual() per-cell
+			Matrix operator*(Matrix);		// Multiplies this Matrix by another, will throw an invalid_argument if they are incompatible
+			Matrix& operator*=(Matrix);		// Multiplies this Matrix by another of the same size, in place.  Will throw an invalid_argument if they are incompatible
 	};
 
 	/**
@@ -281,8 +283,8 @@
 			RGB mul(float scalar);
 
 			// Operators
-			bool operator==(RGB);   // Equality check utilizing rtutil::is_equal()
-			bool operator!=(RGB);   // Equality check utilizing rtutil::is_equal()
+			bool operator==(RGB);   // Equality check utilizing rtutil::isEqual()
+			bool operator!=(RGB);   // Equality check utilizing rtutil::isEqual()
 			RGB operator+(RGB);     // Adds another color to this
 			RGB& operator+=(RGB);   // Adds another color to this, modified in-place
 			RGB operator-();        // Negates the color

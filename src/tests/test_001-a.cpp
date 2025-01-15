@@ -2,7 +2,7 @@
  * @file test_001-a.cpp
  * @brief Unit test for rt_datatypes.cpp
  * 				Point, Vec3, Float4, and RGB classes
- * @date 241202
+ * @date 2024-12-30
  */
 
 #include <iostream>
@@ -51,10 +51,10 @@ int main() {
 	rt::Vec3 b = rt::Vec3(-1.2, 5.3, -3.1);
 	rt::Float4 bf4 = b.float4();
 
-	if (is_equal(b.x, -1.2f)
-			&& is_equal(b.y, 5.3f)
-			&& is_equal(b.z, -3.1f)
-			&& is_equal(bf4.w, 0.0f)) {
+	if (isEqual(b.x, -1.2f)
+			&& isEqual(b.y, 5.3f)
+			&& isEqual(b.z, -3.1f)
+			&& isEqual(bf4.w, 0.0f)) {
 				PASS();
 			} else {
 				FAIL(test_name);
@@ -66,9 +66,9 @@ int main() {
 	test_name = "rt::Point a2 = a.move(b)";
 	rt::Point a2 = a.move(b);
 
-	if (is_equal(a2.x, 3.1f)
-			&& is_equal(a2.y, 1.1f)
-			&& is_equal(a2.z, 0.0f)) {
+	if (isEqual(a2.x, 3.1f)
+			&& isEqual(a2.y, 1.1f)
+			&& isEqual(a2.z, 0.0f)) {
 				PASS();
 			} else {
 				FAIL(test_name);
@@ -78,9 +78,9 @@ int main() {
 	test_name = "rt::Vec3 b2 = a2.vec_to(a)";
 	rt::Vec3 b2 = a2.vec_to(a);
 
-	if (is_equal(b2.x, 1.2f)
-			&& is_equal(b2.y, -5.3f)
-			&& is_equal( b2.z, 3.1f)) {
+	if (isEqual(b2.x, 1.2f)
+			&& isEqual(b2.y, -5.3f)
+			&& isEqual( b2.z, 3.1f)) {
 				PASS();
 			} else {
 				FAIL(test_name);
@@ -143,10 +143,10 @@ int main() {
 	float b6m = b6.mag();
 	rt::Vec3 b6n = b6.normalize();
 	
-	if (is_equal(b6m, 2.0f)
-			&& is_equal(b6n.x, 1.0f)
-			&& is_equal(b6n.y, 0.0f)
-			&& is_equal(b6n.z, 0.0f)) {
+	if (isEqual(b6m, 2.0f)
+			&& isEqual(b6n.x, 1.0f)
+			&& isEqual(b6n.y, 0.0f)
+			&& isEqual(b6n.z, 0.0f)) {
 				PASS();
 			} else {
 				FAIL(test_name);
@@ -158,12 +158,12 @@ int main() {
 	test_name = "rt::RGB constructors";
 	rt::RGB c = rt::RGB(.1, .2, .3);
 	rt::RGB c2 = rt::RGB();
-	if (is_equal(c.r, .1)
-			&& is_equal(c.g, .2)
-			&& is_equal(c.b, .3)
-			&& is_equal(c2.r, 0)
-			&& is_equal(c2.g, 0)
-			&& is_equal(c2.b, 0)) {
+	if (isEqual(c.r, .1)
+			&& isEqual(c.g, .2)
+			&& isEqual(c.b, .3)
+			&& isEqual(c2.r, 0)
+			&& isEqual(c2.g, 0)
+			&& isEqual(c2.b, 0)) {
 				PASS();
 			} else {
 				FAIL(test_name);

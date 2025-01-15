@@ -1,7 +1,7 @@
 /**
  * @file rt_datatypes.cpp
  * @brief Implementations for core classes
- * @date 241230
+ * @date 2025-1-15
  */
 
 #include "rt_datatypes.hpp"
@@ -39,9 +39,9 @@ rt::Vec3 rt::Point::vec_to(rt::Point point2) {
 }
 
 bool rt::Point::operator==(rt::Point point2) {
-	if (rtutil::is_equal(x, point2.x) &&
-		rtutil::is_equal(y, point2.y) &&
-		rtutil::is_equal(z, point2.z)) {
+	if (rtutil::isEqual(x, point2.x) &&
+		rtutil::isEqual(y, point2.y) &&
+		rtutil::isEqual(z, point2.z)) {
 
 		return true;
 	} else {
@@ -50,9 +50,9 @@ bool rt::Point::operator==(rt::Point point2) {
 }
 
 bool rt::Point::operator!=(rt::Point point2) {
-	if (rtutil::is_equal(x, point2.x) &&
-		rtutil::is_equal(y, point2.y) &&
-		rtutil::is_equal(z, point2.z)) {
+	if (rtutil::isEqual(x, point2.x) &&
+		rtutil::isEqual(y, point2.y) &&
+		rtutil::isEqual(z, point2.z)) {
 
 		return false;
 	} else {
@@ -121,9 +121,9 @@ rt::Vec3 rt::Vec3::cross(rt::Vec3 vector2) {
 }
 
 bool rt::Vec3::operator==(rt::Vec3 vector2) {
-	if (rtutil::is_equal(x, vector2.x) &&
-			rtutil::is_equal(y, vector2.y) &&
-			rtutil::is_equal(z, vector2.z)) {
+	if (rtutil::isEqual(x, vector2.x) &&
+			rtutil::isEqual(y, vector2.y) &&
+			rtutil::isEqual(z, vector2.z)) {
 
 		return true;
 	} else {
@@ -438,7 +438,7 @@ rt::MxReturn rt::Matrix::inverse() {
 	}
 
 	float det = determinant();
-	if (rtutil::is_equal(det, 0)) {
+	if (rtutil::isEqual(det, 0)) {
 		return rt::MxReturn(false, M_inv);  // Matrix is uninvertable
 	}
 
@@ -473,7 +473,7 @@ bool rt::Matrix::operator==(rt::Matrix m2) {
 
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
-			if ( !rtutil::is_equal(data(r, c), m2.data(r, c)) ) {
+			if ( !rtutil::isEqual(data(r, c), m2.data(r, c)) ) {
 				return false;
 			}
 		}
@@ -483,6 +483,21 @@ bool rt::Matrix::operator==(rt::Matrix m2) {
 
 bool rt::Matrix::operator!=(rt::Matrix m2) {
 	return !(*this == m2);
+}
+
+rt::Matrix rt::Matrix::operator*(rt::Matrix B) {
+	return mul(B);
+}
+
+rt::Matrix& rt::Matrix::operator*=(rt::Matrix B) {
+	if (rows != B.rows
+			|| cols != B.cols) {
+				throw std::invalid_argument("Cannot use *= with matrices of different sizes!  Use Matrix.mul() instead");
+	}
+
+	rt::Matrix result = mul(B);
+	*this = result;
+	return *this;
 }
 
 
@@ -505,9 +520,9 @@ rt::RGB rt::RGB::mul(float scalar) {
 }
 
 bool rt::RGB::operator==(rt::RGB color2) {
-	if (rtutil::is_equal(r, color2.r) &&
-			rtutil::is_equal(g, color2.g) &&
-			rtutil::is_equal(b, color2.b)) {
+	if (rtutil::isEqual(r, color2.r) &&
+			rtutil::isEqual(g, color2.g) &&
+			rtutil::isEqual(b, color2.b)) {
 
 		return true;
 	} else {
