@@ -22,10 +22,12 @@ add_executable(SDL_TEST src/tests/test_002-b.cpp)
 add_subdirectory(src/lib)
 
 target_link_libraries(UNIT_TEST1 PUBLIC
-                      RT_Datatypes)
+                      RT_Datatypes
+                      RT_Transforms)
 
 target_link_libraries(UNIT_TEST2 PUBLIC
-                        RT_Datatypes)
+                        RT_Datatypes
+                        RT_Transforms)
 
 target_link_libraries(SDL_TEST PUBLIC
                       ${SDL2_LIBRARIES}
@@ -42,8 +44,7 @@ add_custom_command(TARGET SDL_TEST POST_BUILD
 # ============================
 add_custom_command(TARGET SDL_TEST POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:SDL_TEST> ${BIN_DIR}
-                   COMMAND_EXPAND_LISTS
-                   )
+                   COMMAND_EXPAND_LISTS)
 
 #include(CTest)
 enable_testing()

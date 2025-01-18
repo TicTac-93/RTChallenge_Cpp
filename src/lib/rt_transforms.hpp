@@ -29,7 +29,7 @@ Matrix translate(float x, float y, float z);
 Matrix rotate(float x, float y, float z);
 
 /**
- * @brief Generates a xform matrix to scale a given amount.  Negative values are allowed.
+ * @brief Generates a 4x4 xform matrix to scale a given amount.  Negative values are allowed.
  * 
  * @param x, y, z: Scale factor, 1 being neutral
  * @return Matrix 4x4

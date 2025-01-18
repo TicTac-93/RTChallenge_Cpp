@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include "../lib/rt_datatypes.hpp"
+#include "../lib/rt_transforms.hpp"
 #include "../lib/rt_utils.hpp"
 using namespace std;
 using namespace rtutil;
@@ -37,13 +38,13 @@ int main() {
 
 	tests ++;
 	test_name = "rt::Matrix equality operators";
-	rt::Matrix a = rt::Matrix(4, 4);
-	rt::Matrix a2 = rt::Matrix(4, 4);
+	rt::Matrix a = rt::Matrix();
+	rt::Matrix a2 = rt::Matrix();
 	a2.data(0, 0) = 1;
 	a2.data(1, 1) = 1;
 	a2.data(2, 2) = 1;
 	a2.data(3, 3) = 1;
-	if (a == rt::Matrix(4, 4) 
+	if (a == rt::Matrix() 
 			&& a != a2
 			&& a != rt::Matrix(3, 3)) {
 				PASS();
@@ -54,7 +55,7 @@ int main() {
 	tests ++;
 	test_name = "rt::Matrix initializers [1 exc checks]";
 	exc_test = true;
-	rt::Matrix b = rt::Matrix(4, 4);
+	rt::Matrix b = rt::Matrix();
 	b.init_identity();
 	std::vector<float> cells_4x4a = {
 		1, 0, 0, 0,
@@ -88,7 +89,7 @@ int main() {
 	tests ++;
 	test_name = "rt::Matrix data access [2 exc checks]";
 	exc_test = true;
-	rt::Matrix c = rt::Matrix(4, 4);
+	rt::Matrix c = rt::Matrix();
 	c.init_identity();
 	c.data(1, 2) = 12;
 	c.data(2, 2) = 22;
@@ -169,7 +170,7 @@ int main() {
 		0, 0, 0, 1
 	};
 	rt::Matrix e = rt::Matrix(4, 4, cells_4x4f);
-	rt::Matrix e2 = rt::Matrix(4, 4);
+	rt::Matrix e2 = rt::Matrix();
 	e2.init_identity();
 	if (e.mul(p1) == rt::Point(18, 24, 33)
 			&& e.mul(v1) == rt::Vec3(32, 52, 86)
@@ -296,7 +297,7 @@ int main() {
 	rt::Matrix j1 = rt::Matrix(4, 4, cells_j1_4x4);
 	rt::Matrix j2 = rt::Matrix(4, 4, cells_j2_4x4);
 	rt::Matrix j3 = rt::Matrix(4, 4, cells_j3_4x4);
-	rt::Matrix j4 = rt::Matrix(4, 4);
+	rt::Matrix j4 = rt::Matrix();
 	rt::Matrix j4b = rt::Matrix(4, 4, cells_j4b_4x4);
 	j4 = j3.inverse().result;
 	if (j4 == j4b
@@ -362,6 +363,11 @@ int main() {
 			} else {
 				FAIL(test_name);
 	}
+
+	tests ++;
+	test_name = "rt::Matrix transform operations";
+	// Unit tests for Matrix transformations
+	// Translate, rotate, scale, shear, and concatenation.
 
 
 

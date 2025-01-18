@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include "../lib/rt_datatypes.hpp"
+#include "../lib/rt_transforms.hpp"
 #include "../lib/rt_utils.hpp"
 using namespace std;
 using namespace rtutil;
@@ -63,8 +64,8 @@ int main() {
 
 
 	tests ++;
-	test_name = "rt::Point a2 = a.move(b)";
-	rt::Point a2 = a.move(b);
+	test_name = "rt::Point a2 = a.translate(b)";
+	rt::Point a2 = a.translate(b);
 
 	if (isEqual(a2.x, 3.1f)
 			&& isEqual(a2.y, 1.1f)
@@ -207,6 +208,12 @@ int main() {
 			} else {
 				FAIL(test_name);
 	}
+
+	tests ++;
+	test_name = "rt::Point rt::Vec3 transforms";
+	// Unit tests for transform operations
+	// Point translate, rotate, scale, shear
+	// Vec3 rotate, scale
 
 
 

@@ -5,6 +5,7 @@
  */
 
 #include "rt_datatypes.hpp"
+#include "rt_transforms.hpp"
 #include "rt_utils.hpp"
 #include <string>
 #include <math.h>
@@ -29,13 +30,31 @@ rt::Float4 rt::Point::float4() {
 	return rt::Float4(1.0f, x, y, z);
 }
 
-rt::Point rt::Point::move(rt::Vec3 vector) {
-	return rt::Point(x + vector.x, y + vector.y, z + vector.z);
-}
-
 rt::Vec3 rt::Point::vec_to(rt::Point point2) {
 	// p1 - p2 produces a back-vector from p2->p1, so we do p2 - p1 to get p1->p2
 	return rt::Vec3(point2.x - x, point2.y - y, point2.z - z);
+}
+
+rt::Point rt::Point::translate(rt::Vec3 vector) {
+	return rt::Point(x + vector.x, y + vector.y, z + vector.z);
+}
+
+rt::Point rt::Point::translate(float in_x, float in_y, float in_z) {
+	return rt::Point(x + in_x, y + in_y, z + in_z);
+}
+
+rt::Point rt::Point::rotate(float in_x, float in_y, float in_z) {
+	rt::Matrix xform = rt::rotate(in_x, in_y, in_z);
+	return xform.mul(*this);
+}
+
+rt::Point rt::Point::scale(float in_x, float in_y, float in_z) {
+	return rt::Point(x * in_x, y * in_y, z * in_z);
+}
+
+rt::Point rt::Point::shear(float Xy, float Xz, float Yx, float Yz, float Zx, float Zy) {
+	rt::Matrix xform = rt::shear(Xy, Xz, Yx, Yz, Zx, Zy);
+	return xform.mul(*this);
 }
 
 bool rt::Point::operator==(rt::Point point2) {
@@ -120,6 +139,15 @@ rt::Vec3 rt::Vec3::cross(rt::Vec3 vector2) {
 					x * vector2.y  -  y * vector2.x);
 }
 
+rt::Vec3 rt::Vec3::rotate(float in_x, float in_y, float in_z) {
+	rt::Matrix xform = rt::rotate(in_x, in_y, in_z);
+	return xform.mul(*this);
+}
+
+rt::Vec3 rt::Vec3::scale(float in_x, float in_y, float in_z) {
+	return rt::Vec3(x * in_x, y * in_y, z * in_z);
+}
+
 bool rt::Vec3::operator==(rt::Vec3 vector2) {
 	if (rtutil::isEqual(x, vector2.x) &&
 			rtutil::isEqual(y, vector2.y) &&
@@ -163,6 +191,18 @@ rt::Vec3& rt::Vec3::operator+=(rt::Vec3 vector2) {
 
 // Matrix
 // ===============
+rt::Matrix::Matrix()
+	: rows{4}
+	, cols{4}
+	, data_size_{16}
+{
+	data_.resize(data_size_);
+	data_.shrink_to_fit();
+	for (int i = 0; i < data_size_; i++) {
+		data_[i] = 0;
+	}
+}
+
 rt::Matrix::Matrix(int in_rows, int in_columns)
 	: rows{in_rows}
 	,	cols{in_columns}
@@ -206,7 +246,7 @@ float& rt::Matrix::data(int row, int col) {
 	return data_[(row * cols) + col];
 }
 
-void rt::Matrix::init_identity() {
+rt::Matrix& rt::Matrix::init_identity() {
 	for (int r = 0; r < rows; r++) {
 		for (int c = 0; c < cols; c++) {
 			if (r == c) {
@@ -215,7 +255,9 @@ void rt::Matrix::init_identity() {
 				data(r, c) = 0;
 			}
 		}
-	}	
+	}
+
+	return *this;
 }
 
 rt::Matrix rt::Matrix::mul(rt::Matrix B) {
@@ -453,6 +495,38 @@ rt::MxReturn rt::Matrix::inverse() {
 		}
 	}
 	return rt::MxReturn(true, M_inv);
+}
+
+rt::Matrix rt::Matrix::translate(float in_x, float in_y, float in_z) {
+	if (rows != 4 || cols != 4) {
+		throw std::runtime_error("Cannot apply transforms to a non-4x4 Matrix!");
+	}
+
+	return mul(rt::translate(in_x, in_y, in_z));
+}
+
+rt::Matrix rt::Matrix::rotate(float in_x, float in_y, float in_z) {
+	if (rows != 4 || cols != 4) {
+		throw std::runtime_error("Cannot apply transforms to a non-4x4 Matrix!");
+	}
+
+	return mul(rt::rotate(in_x, in_y, in_z));
+}
+
+rt::Matrix rt::Matrix::scale(float in_x, float in_y, float in_z) {
+	if (rows != 4 || cols != 4) {
+		throw std::runtime_error("Cannot apply transforms to a non-4x4 Matrix!");
+	}
+
+	return mul(rt::scale(in_x, in_y, in_z));
+}
+
+rt::Matrix rt::Matrix::shear(float Xy, float Xz, float Yx, float Yz, float Zx, float Zy) {
+	if (rows != 4 || cols != 4) {
+		throw std::runtime_error("Cannot apply transforms to a non-4x4 Matrix!");
+	}
+
+	return mul(rt::shear(Xy, Xz, Yx, Yz, Zx, Zy));
 }
 
 rt::Matrix& rt::Matrix::operator=(rt::Matrix m2) {

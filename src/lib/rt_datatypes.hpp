@@ -46,14 +46,53 @@
 			Float4 float4();
 
 			/**
-			 * @brief Offset this point by vector, returning the resulting Point
-			 */
-			Point move(Vec3 vector);
-
-			/**
 			 * @brief Returns the vector from here to point2
 			 */
 			Vec3 vec_to(Point point2);
+
+			/**
+			 * @brief Offset this point by X, Y, Z, returning the resulting Point
+			 * 
+			 * @param x, y, z: Translation to apply
+			 * @return Point 
+			 */
+			Point translate(float x, float y, float z);
+
+			/**
+			 * @brief Offset this point by vector, returning the resulting Point
+			 */
+			Point translate(Vec3 vector);
+
+			/**
+			 * @brief Rotates this Point around the origin, returning the resulting Point.
+			 * 
+			 * 				Rotation is applied in (Z, Y, X) order.
+			 * 
+			 * @param x, y, z: Rotation in degrees
+			 * @return Point 
+			 */
+			Point rotate(float x, float y, float z);
+
+			/**
+			 * @brief Scales the Point relative to the origin, returning the resulting Point.
+			 * 
+			 * @param x, y, z: Scale factor, where 1.0 is unchanged.
+			 * @return Point 
+			 */
+			Point scale(float x, float y, float z);
+
+			/**
+			 * @brief Shears the Point relative to the origin, returning the resulting Point.
+			 * 
+			 * @param Xy: X shear, Y component
+			 * @param Xz: X shear, Z component
+			 * @param Yx: Y shear, X component
+			 * @param Yz: Y shear, Z component
+			 * @param Zx: Z shear, X component
+			 * @param Zy: Z shear, Y component
+			 * @return Point 
+			 */
+			Point shear(float Xy, float Xz, float Yx, float Yz, float Zx, float Zy);
 
 			// Operators
 			bool operator==(Point);     // Equality check utilizing rtutil::isEqual()
@@ -113,6 +152,24 @@
 			 * @brief Calculates the cross product of this and vector2
 			 */
 			Vec3 cross(Vec3 vector2);
+
+			/**
+			 * @brief Rotates the Vector, returning the result.
+			 * 
+			 * 				Rotation is applied in (Z, Y, X) order.
+			 * 
+			 * @param x, y, z: Rotation in degrees
+			 * @return Vec3 
+			 */
+			Vec3 rotate(float x, float y, float z);
+
+			/**
+			 * @brief Scales the Vector non-uniformly, returning the result.
+			 * 
+			 * @param x, y, z: Scale factor, where 1.0 is unchanged.
+			 * @return Vec3 
+			 */
+			Vec3 scale(float x, float y, float z);
 			
 			// Operators
 			bool operator==(Vec3);      // Equality check utilizing rtutil::isEqual()
@@ -140,6 +197,15 @@
 
 		public:
 			const int rows, cols;
+
+			/**
+			 * @brief Construct a new 4x4 Matrix.  Initially zero-filled.
+			 * 
+			 * 				The Matrix CAN NOT be resized after construction, if a different size is required
+			 * 				call this constructor using (rows, columns) args.
+			 * 
+			 */
+			Matrix();
 
 			/**
 			 * @brief Construct a Matrix of variable size.  Initially zero-filled.
@@ -184,7 +250,7 @@
 			 * @brief Initializes this Matrix as an identity matrix.  All existing data will be lost!
 			 * 
 			 */
-			void init_identity();
+			Matrix& init_identity();
 
 			/**
 			 * @brief Multiplies this Matrix(A) with another(B), returning the result(AB).
@@ -253,6 +319,45 @@
 			 * @return MxReturn struct indicating success of the operation, and the resulting Matrix.
 			 */
 			MxReturn inverse();
+
+			/**
+			 * @brief Generates a translation Matrix(B) and then multiplies this*B, returning the result.
+			 * 
+			 * @param x, y, z: Translation amounts 
+			 * @return Matrix 
+			 */
+			Matrix translate(float x, float y, float z);
+
+			/**
+			 * @brief Generates a rotation Matrix(B) and then multiplies this*B, returning the result.
+			 * 
+			 * 				Rotation is applied in (Z, Y, X) order.
+			 * 
+			 * @param x, y, z: Rotation in degrees.
+			 * @return Matrix 
+			 */
+			Matrix rotate(float x, float y, float z);
+
+			/**
+			 * @brief Generates a scale Matrix(B) and then multiplies this*B, returning the result.
+			 * 
+			 * @param x, y, z: Scale factor, where 1.0 is unchanged.
+			 * @return Matrix 
+			 */
+			Matrix scale(float x, float y, float z);
+
+			/**
+			 * @brief Generates a shearing Matrix(B) and then multiplies this*B, returning the result.
+			 * 
+			 * @param Xy: X shear, Y component
+			 * @param Xz: X shear, Z component
+			 * @param Yx: Y shear, X component
+			 * @param Yz: Y shear, Z component
+			 * @param Zx: Z shear, X component
+			 * @param Zy: Z shear, Y component  
+			 * @return Matrix 
+			 */
+			Matrix shear(float Xy, float Xz, float Yx, float Yz, float Zx, float Zy);
 
 			// Operators
 			Matrix& operator=(Matrix);	// Copy operator, will throw a runtime_error if the matrices are of different sizes
